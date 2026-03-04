@@ -1,0 +1,28 @@
+---
+# local.yml — personal overrides for the remote (VPS) environment
+#
+# This file is gitignored and never committed.
+# Copy it: cp local.yml.example local.yml
+# Then fill in your actual values below.
+#
+# Variables here take precedence over vars.yml and role defaults,
+# so only override what differs from the public placeholders.
+
+# ── Domains ───────────────────────────────────────────────────────────────────
+dokploy_domain: "dokploy.example.com"      # your Dokploy subdomain
+dokploy_public_domains:
+  - "example.com"
+  - "www.example.com"
+
+# ── Tailscale ────────────────────────────────────────────────────────────────
+dokploy_tailscale_ip: "100.64.0.1"         # your VPS Tailscale IP (100.x.x.x)
+tailscale_hostname: "ovh-vps"
+
+# ── SSH authorized keys ───────────────────────────────────────────────────────
+ssh_authorized_keys:
+  - user: admin
+    keys:
+      - "ssh-ed25519 AAAA... user@host"
+  - user: ansible
+    keys:
+      - "ssh-ed25519 AAAA... ansible-automation"

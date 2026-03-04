@@ -1,0 +1,37 @@
+---
+# local.yml — personal overrides for the home environment
+#
+# This file is gitignored and never committed.
+# Copy it: cp local.yml.example local.yml
+# Then fill in your actual values below.
+#
+# Variables here take precedence over vars.yml and role defaults,
+# so only override what differs from the public placeholders.
+
+# ── Server ────────────────────────────────────────────────────────────────────
+# Also update ansible_host in hosts.yml, then run:
+#   git update-index --assume-unchanged ansible/inventories/home/hosts.yml
+# (prevents accidental commits of your real IP)
+
+# ── Networking ────────────────────────────────────────────────────────────────
+traefik_domain: "lan.example.com"          # e.g. lan.yourdomain.dev
+traefik_backend_ip: "192.168.0.10"         # your server LAN IP
+traefik_acme_email: "acme@example.com"     # your email (if ACME enabled)
+
+tailscale_hostname: "homelab"
+tailscale_advertise_routes:
+  - "192.168.0.0/24"                       # your LAN CIDR
+
+# ── SSH authorized keys ───────────────────────────────────────────────────────
+ssh_authorized_keys:
+  - user: admin                            # your local username on the server
+    keys:
+      - "ssh-ed25519 AAAA... user@host"
+  - user: ansible
+    keys:
+      - "ssh-ed25519 AAAA... ansible-automation"
+
+# ── Home Assistant ────────────────────────────────────────────────────────────
+ha_home_name: "Home"
+ha_currency: "USD"
+ha_country: "US"

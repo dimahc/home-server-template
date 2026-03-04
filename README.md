@@ -7,32 +7,44 @@ Infrastructure-as-code repo for a small Debian-based homelab. The goal is to pro
 ## Getting Started
 
 1. Clone this repo on your admin workstation.
-2. Pick an environment (`sandbox`, `home`, or `remote`) under `ansible/inventories/` and adjust the inventory + group vars for your nodes.
-3. **Add your SSH keys** to `ansible/inventories/<env>/group_vars/all/ssh.yml` (see [SSH Setup Guide](docs/ssh-setup.md)).
-4. **Create Terraform variables** from the example file:
+2. Pick an environment (`sandbox`, `home`, or `remote`) under `ansible/inventories/`.
+3. **Create your local overrides** (gitignored — never committed):
    ```bash
-   cp terraform/envs/<env>/terraform.tfvars.example terraform/envs/<env>/terraform.tfvars
-   # Edit terraform.tfvars with your actual values (API tokens, IPs, etc.)
+   cp ansible/inventories/<env>/group_vars/all/local.yml.example \
+      ansible/inventories/<env>/group_vars/all/local.yml
+   # Edit local.yml with your real IPs, domains, SSH keys
+   ```
+4. **Set your server IP** in `ansible/inventories/<env>/hosts.yml`, then prevent accidental commits:
+   ```bash
+   git update-index --assume-unchanged ansible/inventories/<env>/hosts.yml
    ```
 5. **Create Ansible vault** for secrets:
    ```bash
-   cp ansible/inventories/<env>/group_vars/vault.yml.example ansible/inventories/<env>/group_vars/vault.yml
+   cp ansible/inventories/<env>/group_vars/vault.yml.example \
+      ansible/inventories/<env>/group_vars/vault.yml
    ansible-vault encrypt ansible/inventories/<env>/group_vars/vault.yml
    ```
-6. Run `scripts/bootstrap.sh` on a fresh Debian node (or execute manually) to install base packages, Docker, Terraform, and Ansible.
-7. Apply Terraform, then run the Ansible playbooks.
+6. **Create Terraform variables** (for `remote` env):
+   ```bash
+   cp terraform/envs/<env>/terraform.tfvars.example terraform/envs/<env>/terraform.tfvars
+   # Edit terraform.tfvars with your API tokens, IPs, etc.
+   ```
+7. Run `scripts/bootstrap.sh` on a fresh Debian node to install Docker, Terraform, and Ansible.
+8. Apply Terraform, then run the Ansible playbooks.
 
-### Customization
+### Local Override Pattern
 
-Before deploying, review and update these files with your specific values:
+Tracked files contain placeholder values (`example.com`, `192.168.0.10`, etc.) so the repo is safe to be public. Your real values go in the gitignored `local.yml`:
 
-| File                                                | What to customize               |
-| --------------------------------------------------- | ------------------------------- |
-| `ansible/inventories/<env>/hosts.yml`               | Server IP addresses             |
-| `ansible/inventories/<env>/group_vars/all/vars.yml` | Domain, email, service configs  |
-| `ansible/inventories/<env>/group_vars/all/ssh.yml`  | Your SSH public keys            |
-| `ansible/inventories/<env>/group_vars/vault.yml`    | Secrets (passwords, API tokens) |
-| `terraform/envs/<env>/terraform.tfvars`             | Cloud provider credentials      |
+```
+ansible/inventories/<env>/group_vars/all/
+  vars.yml          ← tracked, placeholder values
+  ssh.yml           ← tracked, placeholder keys
+  vault.yml         ← gitignored, encrypted secrets
+  local.yml         ← gitignored, your real overrides  ← you create this
+```
+
+Ansible merges all YAML files in `group_vars/all/` alphabetically, so `local.yml` silently overrides any placeholder without touching tracked files.
 
 ### Quick: Home Assistant on home env
 

@@ -20,6 +20,9 @@ tmp/
 # Ansible collection cache
 .ansible/
 
+# Local overrides (personal values that should not be committed)
+**/group_vars/**/local.yml
+
 # Editor swap files
 *.swp
 *.swo
