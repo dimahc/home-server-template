@@ -1,0 +1,66 @@
+# {{ ansible_managed }}
+# Home Assistant Configuration — managed by Ansible
+# Manual changes will be OVERWRITTEN on next deploy.
+
+default_config:
+
+{% if ha_enable_traefik | bool %}
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+{% for cidr in ha_trusted_proxies %}
+    - {{ cidr }}
+{% endfor %}
+{% endif %}
+
+frontend:
+  themes: !include_dir_merge_named themes
+{% if ha_extra_module_urls | length > 0 %}
+  extra_module_url:
+{% for url in ha_extra_module_urls %}
+    - {{ url }}
+{% endfor %}
+{% endif %}
+
+homeassistant:
+  name: "{{ ha_home_name }}"
+  unit_system: metric
+  currency: "{{ ha_currency }}"
+  country: "{{ ha_country }}"
+  time_zone: "{{ ha_timezone }}"
+  external_url: "{{ ha_external_url }}"
+  internal_url: "{{ ha_internal_url }}"
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+{% if ha_dashboard_files | length > 0 %}
+lovelace:
+  dashboards:
+{% if ha_default_dashboard is defined %}
+    {{ ha_default_dashboard }}:
+      mode: yaml
+      filename: dashboards/{{ ha_dashboard_files[0] }}
+      title: {{ ha_home_name }}
+      icon: mdi:view-dashboard
+      show_in_sidebar: true
+{% for dash in ha_dashboard_files[1:] %}
+    {{ dash | regex_replace('\.yaml$', '') }}:
+      mode: yaml
+      filename: dashboards/{{ dash }}
+      title: {{ dash | regex_replace('\.yaml$', '') | replace('-', ' ') | title }}
+      icon: mdi:view-dashboard
+      show_in_sidebar: true
+{% endfor %}
+{% else %}
+{% for dash in ha_dashboard_files %}
+    {{ dash | regex_replace('\.yaml$', '') }}:
+      mode: yaml
+      filename: dashboards/{{ dash }}
+      title: {{ dash | regex_replace('\.yaml$', '') | replace('-', ' ') | title }}
+      icon: mdi:view-dashboard
+      show_in_sidebar: true
+{% endfor %}
+{% endif %}
+{% endif %}

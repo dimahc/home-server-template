@@ -1,0 +1,5 @@
+---
+- name: Restart Pihole
+  community.docker.docker_compose_v2:
+    project_src: "{{ pihole_data_dir }}"
+    state: restarted

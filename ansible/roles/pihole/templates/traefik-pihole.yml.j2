@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# Traefik file-provider config for Pi-hole (host network mode)
+http:
+  routers:
+    pihole:
+      rule: "Host(`{{ pihole_traefik_subdomain }}.{{ traefik_domain }}`)"
+      entryPoints:
+        - {{ pihole_traefik_entrypoints }}
+      service: pihole
+
+  services:
+    pihole:
+      loadBalancer:
+        servers:
+          - url: "http://{{ traefik_backend_ip }}:{{ pihole_web_port }}"

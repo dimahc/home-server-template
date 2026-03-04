@@ -1,0 +1,6 @@
+---
+- name: Restart alexa-skill
+  community.docker.docker_compose_v2:
+    project_src: "{{ alexa_skill_compose_dir }}"
+    state: restarted
+  listen: Restart alexa-skill

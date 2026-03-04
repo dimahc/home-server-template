@@ -1,0 +1,51 @@
+services:
+  {{ alexa_skill_container_name }}:
+    image: {{ alexa_skill_image }}
+    container_name: {{ alexa_skill_container_name }}
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      SKILL_HOSTNAME: "{{ alexa_skill_hostname }}"
+      MA_HOSTNAME: "{{ alexa_skill_ma_hostname }}"
+      PORT: "{{ alexa_skill_port }}"
+      LOCALE: "{{ alexa_skill_locale }}"
+      AWS_DEFAULT_REGION: "{{ alexa_skill_aws_region }}"
+      TZ: "{{ homelab_timezone | default('UTC') }}"
+{% if alexa_skill_app_username | length > 0 %}
+      APP_USERNAME: /run/secrets/APP_USERNAME
+{% endif %}
+{% if alexa_skill_app_password | length > 0 %}
+      APP_PASSWORD: /run/secrets/APP_PASSWORD
+{% endif %}
+{% if alexa_skill_app_username | length > 0 or alexa_skill_app_password | length > 0 %}
+    secrets:
+{% if alexa_skill_app_username | length > 0 %}
+      - APP_USERNAME
+{% endif %}
+{% if alexa_skill_app_password | length > 0 %}
+      - APP_PASSWORD
+{% endif %}
+{% endif %}
+    volumes:
+      - {{ alexa_skill_ask_data_dir }}:/root/.ask
+      - {{ alexa_skill_data_dir }}/app.py:/app/src/app.py:ro
+      - {{ alexa_skill_data_dir }}/util.py:/app/src/skill/util.py:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -o /dev/null -w '%{http_code}' http://localhost:{{ alexa_skill_port }}/status | grep -q 401 || curl -sf http://localhost:{{ alexa_skill_port }}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+{% if alexa_skill_app_username | length > 0 or alexa_skill_app_password | length > 0 %}
+secrets:
+{% if alexa_skill_app_username | length > 0 %}
+  APP_USERNAME:
+    file: {{ alexa_skill_secrets_dir }}/app_username.txt
+{% endif %}
+{% if alexa_skill_app_password | length > 0 %}
+  APP_PASSWORD:
+    file: {{ alexa_skill_secrets_dir }}/app_password.txt
+{% endif %}
+{% endif %}

@@ -1,0 +1,31 @@
+---
+- name: Create Cloudflare Tunnel directory
+  ansible.builtin.file:
+    path: "{{ cloudflare_tunnel_data_dir }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Check if tunnel token is set
+  ansible.builtin.fail:
+    msg: "cloudflare_tunnel_token must be set in group_vars/all.yml"
+  when: cloudflare_tunnel_token == ""
+
+- name: Deploy Cloudflare Tunnel docker-compose
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ cloudflare_tunnel_data_dir }}/docker-compose.yml"
+    mode: "0644"
+  notify: Restart cloudflared
+
+- name: Start Cloudflare Tunnel container
+  community.docker.docker_compose_v2:
+    project_src: "{{ cloudflare_tunnel_data_dir }}"
+    state: present
+    pull: always
+  register: cloudflared_output
+
+- name: Display Cloudflare Tunnel status
+  ansible.builtin.debug:
+    msg: "Cloudflare Tunnel is running. Check logs: docker logs cloudflared"

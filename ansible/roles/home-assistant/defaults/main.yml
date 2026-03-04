@@ -1,0 +1,36 @@
+---
+# CUSTOMIZE: Pin to a specific version (check https://github.com/home-assistant/core/releases)
+ha_image: "ghcr.io/home-assistant/home-assistant:2024.12.0"
+ha_container_name: "homeassistant"
+ha_compose_dir: "/opt/homelab/homeassistant"
+ha_config_dir: "/opt/homelab/homeassistant/config"
+ha_timezone: "{{ homelab_timezone | default('UTC') }}"
+ha_network_mode: "host" # recommended for discovery
+ha_extra_devices: [] # e.g., ["/dev/ttyUSB0:/dev/ttyUSB0", "/dev/ttyACM0:/dev/ttyACM0"]
+ha_env: {} # additional env vars if needed
+ha_enable_traefik: true
+ha_traefik_subdomain: "ha"
+ha_traefik_entrypoints: "web"
+ha_web_port: 8123
+# CUSTOMIZE: Set your LAN CIDR for trusted proxies
+ha_trusted_proxies:
+  - "192.168.0.0/24"
+  - "172.16.0.0/12"
+
+# ── configuration.yaml settings ──
+ha_home_name: "Maison"
+ha_currency: "EUR"
+ha_country: "FR"
+ha_external_url: "http://{{ ha_traefik_subdomain }}.{{ traefik_domain }}"
+ha_internal_url: "http://{{ traefik_backend_ip }}:{{ ha_web_port }}"
+
+# Extra frontend module URLs (e.g., Bubble Card pop-up fix)
+ha_extra_module_urls:
+  - /hacsfiles/Bubble-Card/bubble-pop-up-fix.js
+
+# Dashboard YAML files to copy into HA config dir
+ha_dashboard_files:
+  - home.yaml
+
+# Default dashboard path (dashboard-id/view-path)
+ha_default_dashboard: "dashboard-maison"

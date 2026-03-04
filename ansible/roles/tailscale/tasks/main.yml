@@ -1,0 +1,121 @@
+---
+# ── Install Tailscale ──
+
+- name: Check if Tailscale is already installed
+  ansible.builtin.command:
+    cmd: tailscale version
+  register: tailscale_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install Tailscale via official install script
+  when: tailscale_installed.rc != 0
+  block:
+    - name: Download Tailscale install script
+      ansible.builtin.get_url:
+        url: https://tailscale.com/install.sh
+        dest: /tmp/tailscale-install.sh
+        mode: "0755"
+
+    - name: Run Tailscale install script
+      ansible.builtin.command:
+        cmd: /tmp/tailscale-install.sh
+      changed_when: true
+      environment:
+        TS_INSTALL: "1"
+
+    - name: Remove install script
+      ansible.builtin.file:
+        path: /tmp/tailscale-install.sh
+        state: absent
+
+# ── Enable and start tailscaled ──
+
+- name: Enable and start tailscaled service
+  ansible.builtin.systemd:
+    name: tailscaled
+    state: started
+    enabled: true
+
+# ── Check current Tailscale status ──
+
+- name: Check Tailscale status
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: tailscale_status_raw
+  changed_when: false
+  failed_when: false
+
+- name: Parse Tailscale status
+  ansible.builtin.set_fact:
+    tailscale_status: "{{ tailscale_status_raw.stdout | from_json }}"
+  when: tailscale_status_raw.rc == 0
+
+- name: Determine if Tailscale needs authentication
+  ansible.builtin.set_fact:
+    tailscale_needs_auth: >-
+      {{ tailscale_status_raw.rc != 0 or
+         (tailscale_status.BackendState | default('NeedsLogin')) == 'NeedsLogin' }}
+
+# ── Authenticate and bring up Tailscale ──
+
+- name: Validate auth key is set
+  ansible.builtin.fail:
+    msg: >-
+      tailscale_auth_key must be set (generate at https://login.tailscale.com/admin/settings/keys).
+      Store it in vault: ansible-vault encrypt_string 'tskey-auth-...' --name 'vault_tailscale_auth_key'
+  when:
+    - tailscale_needs_auth | bool
+    - tailscale_auth_key | length == 0
+
+- name: Build tailscale up arguments
+  ansible.builtin.set_fact:
+    tailscale_up_cmd: >-
+      tailscale up
+      --authkey={{ tailscale_auth_key }}
+      --hostname={{ tailscale_hostname }}
+      {% if tailscale_accept_routes %}--accept-routes{% endif %}
+      {% if tailscale_exit_node %}--advertise-exit-node{% endif %}
+      {% if tailscale_advertise_routes | length > 0 %}--advertise-routes={{ tailscale_advertise_routes | join(',') }}{% endif %}
+      {% if tailscale_ssh %}--ssh{% endif %}
+      {{ tailscale_up_args }}
+
+- name: Bring Tailscale up
+  ansible.builtin.command:
+    cmd: "{{ tailscale_up_cmd }}"
+  changed_when: true
+  when: tailscale_needs_auth | bool
+  no_log: true # hide auth key from logs
+
+- name: Get Tailscale IP
+  ansible.builtin.command:
+    cmd: tailscale ip -4
+  register: tailscale_ip_result
+  changed_when: false
+
+- name: Set Tailscale IP fact
+  ansible.builtin.set_fact:
+    tailscale_ip: "{{ tailscale_ip_result.stdout | trim }}"
+
+- name: Display Tailscale node info
+  ansible.builtin.debug:
+    msg: >-
+      Tailscale node '{{ tailscale_hostname }}' is up.
+      Tailscale IP: {{ tailscale_ip }}
+
+# ── Firewall: allow Tailscale ──
+
+- name: Allow Tailscale UDP port through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ tailscale_port }}"
+    proto: udp
+    comment: "Tailscale WireGuard"
+  when: firewall_default_policy | default('') == 'deny'
+
+- name: Allow all traffic on Tailscale interface (tailscale0)
+  community.general.ufw:
+    rule: allow
+    interface_in: tailscale0
+    comment: "Tailscale mesh traffic"
+  when: firewall_default_policy | default('') == 'deny'

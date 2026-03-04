@@ -1,0 +1,21 @@
+---
+# Bluetooth configuration
+bluetooth_packages:
+  - bluez
+  - bluez-tools
+  - dbus-broker
+  - rfkill
+
+bluetooth_service_name: bluetooth
+
+# Enable Bluetooth service on boot
+bluetooth_service_enabled: true
+
+# Power on the adapter automatically (persisted in main.conf)
+bluetooth_auto_enable: true
+
+# Power on adapter immediately if found off
+bluetooth_power_on: true
+
+# Make adapter discoverable briefly on restart (seconds, 0 = forever)
+bluetooth_discoverable_timeout: 0

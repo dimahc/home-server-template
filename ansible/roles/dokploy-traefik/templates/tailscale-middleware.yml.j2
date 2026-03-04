@@ -1,0 +1,17 @@
+# Tailscale IP allowlist middleware for Dokploy Traefik
+# Managed by Ansible — do not edit manually
+#
+# This middleware restricts access to Tailscale network only.
+# Apply to any service that should NOT be publicly accessible.
+#
+# Usage in Dokploy UI (Advanced → Traefik):
+#   Add middleware: tailscale-only@file
+
+http:
+  middlewares:
+    tailscale-only:
+      ipAllowList:
+        sourceRange:
+{% for range in tailscale_allowed_ranges %}
+          - "{{ range }}"
+{% endfor %}

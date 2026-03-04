@@ -1,0 +1,19 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: dimahc
+  description: Pi-hole DNS sinkhole for ad blocking
+  company: homelab
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+        - trixie
+  galaxy_tags:
+    - pihole
+    - dns
+    - docker

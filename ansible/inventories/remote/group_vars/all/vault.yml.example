@@ -1,0 +1,11 @@
+---
+# Vault-encrypted secrets for remote (VPS) environment
+#
+# Encrypt: ansible-vault encrypt ansible/inventories/remote/group_vars/all/vault.yml
+# Edit:    ansible-vault edit ansible/inventories/remote/group_vars/all/vault.yml
+
+# VPS public IP (kept in vault to avoid exposing in public repo)
+vault_vps_public_ip: "CHANGE_ME_THEN_ENCRYPT"
+
+# Tailscale auth key (same tailnet as home, or generate a separate one)
+vault_tailscale_auth_key: "tskey-auth-CHANGE_ME_THEN_ENCRYPT"

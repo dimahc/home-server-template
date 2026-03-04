@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  author: dimahc
+  description: Install and configure Tailscale mesh VPN
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+        - trixie
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - vpn
+    - tailscale
+    - wireguard
+    - security
+    - networking
+
+dependencies: []

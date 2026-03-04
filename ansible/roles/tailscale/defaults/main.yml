@@ -1,0 +1,34 @@
+---
+# Tailscale VPN role
+# Install and configure Tailscale on any host for secure mesh networking.
+
+# Auth key — generate from https://login.tailscale.com/admin/settings/keys
+# MUST be overridden in vault (never commit plaintext)
+tailscale_auth_key: ""
+
+# Tailscale version (empty = latest from official repo)
+tailscale_version: ""
+
+# Extra flags for `tailscale up` (e.g., --advertise-exit-node, --accept-routes)
+tailscale_up_args: ""
+
+# Accept routes advertised by other nodes
+tailscale_accept_routes: false
+
+# Advertise this node as an exit node
+tailscale_exit_node: false
+
+# Advertise local subnets (e.g., "192.168.1.0/24")
+tailscale_advertise_routes: []
+
+# Enable Tailscale SSH (access node via `tailscale ssh`)
+tailscale_ssh: false
+
+# Enable MagicDNS hostname override
+tailscale_hostname: "{{ inventory_hostname }}"
+
+# UFW: port for Tailscale WireGuard (direct connections)
+tailscale_port: 41641
+
+# State directory
+tailscale_state_dir: "/var/lib/tailscale"

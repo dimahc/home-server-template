@@ -1,0 +1,25 @@
+---
+# SSH public keys to deploy to servers
+# CUSTOMIZE: Replace with your actual SSH public keys
+ssh_authorized_keys:
+  - user: admin
+    keys:
+      - "ssh-ed25519 AAAA_YOUR_KEY_HERE_REPLACE_ME admin@workstation"
+  - user: ansible
+    keys:
+      - "ssh-ed25519 AAAA_YOUR_KEY_HERE_REPLACE_ME ansible-automation"
+
+# Create ansible service account for automation
+ansible_service_account:
+  enabled: true
+  username: ansible
+  shell: /bin/bash
+  groups: []
+  sudo_nopasswd_commands:
+    - ALL
+
+# SSH daemon hardening options
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_pubkey_authentication: "yes"
+ssh_port: 22

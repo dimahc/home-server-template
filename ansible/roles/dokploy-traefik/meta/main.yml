@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  author: dimahc
+  description: Deploy Traefik IP allowlist middleware for Dokploy to restrict services to Tailscale
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+        - trixie
+  galaxy_tags:
+    - traefik
+    - dokploy
+    - tailscale
+    - security
+dependencies: []

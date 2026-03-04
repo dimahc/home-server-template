@@ -1,0 +1,4 @@
+# Ansible automation account sudoers configuration
+# Managed by Ansible - do not edit manually
+
+{{ ansible_service_account.username }} ALL=(ALL) NOPASSWD: {{ ansible_service_account.sudo_nopasswd_commands | join(', ') }}

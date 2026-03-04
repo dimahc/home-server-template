@@ -1,0 +1,35 @@
+---
+# Common role defaults
+# These variables are typically overridden in group_vars
+
+# Locale and timezone settings
+homelab_timezone: "UTC"
+homelab_locale: "en_US.UTF-8"
+
+# Base packages to install on all hosts
+homelab_packages:
+  - curl
+  - git
+  - vim
+  - htop
+  - rsync
+  - ca-certificates
+  - gnupg
+
+# Ansible service account configuration
+ansible_service_account:
+  enabled: true
+  username: ansible
+  shell: /bin/bash
+  groups: []
+  sudo_nopasswd_commands:
+    - ALL
+
+# SSH daemon hardening options
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_pubkey_authentication: "yes"
+ssh_port: 22
+
+# SSH authorized keys (override in group_vars/all/ssh.yml)
+ssh_authorized_keys: []

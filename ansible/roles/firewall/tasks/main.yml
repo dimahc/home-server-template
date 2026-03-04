@@ -1,0 +1,39 @@
+---
+- name: Install UFW
+  ansible.builtin.package:
+    name: ufw
+    state: present
+
+- name: Reset UFW to default
+  community.general.ufw:
+    state: reset
+  when: firewall_reset | default(false) | bool
+
+- name: Set UFW default policy
+  community.general.ufw:
+    direction: incoming
+    policy: "{{ firewall_default_policy }}"
+
+- name: Allow TCP ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ firewall_allowed_tcp_ports }}"
+
+- name: Allow UDP ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: udp
+  loop: "{{ firewall_allowed_udp_ports }}"
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+
+- name: Enable UFW service to start on boot
+  ansible.builtin.systemd:
+    name: ufw
+    enabled: yes
+    state: started

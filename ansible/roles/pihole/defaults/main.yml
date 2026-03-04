@@ -1,0 +1,19 @@
+---
+# Pi-hole configuration
+# Pi-hole v6+ uses FTL webserver with FTLCONF_* env vars
+pihole_image: "pihole/pihole:2026.02.0"
+pihole_container_name: "pihole"
+pihole_data_dir: "/opt/homelab/pihole"
+pihole_web_port: 8080
+# Password should be overridden in group_vars via vault
+pihole_password: "changeme"
+
+# Upstream DNS servers (avoid using local interface as upstream)
+pihole_upstream_dns:
+  - "1.1.1.1"
+  - "1.0.0.1"
+
+# Traefik file-provider routing (LAN access)
+pihole_enable_traefik: true
+pihole_traefik_subdomain: "pihole"
+pihole_traefik_entrypoints: "web"

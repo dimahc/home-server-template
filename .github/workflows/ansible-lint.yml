@@ -1,0 +1,35 @@
+name: Ansible Lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ansible/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "ansible/**"
+
+jobs:
+  ansible-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ansible-lint
+        run: uv pip install --system ansible-lint
+
+      - name: Install Ansible collections
+        run: ansible-galaxy install -r ansible/requirements.yml
+
+      - name: Run ansible-lint
+        working-directory: ansible
+        run: ansible-lint .

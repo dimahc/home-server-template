@@ -1,0 +1,39 @@
+homelab_timezone: "UTC"
+homelab_locale: "en_US.UTF-8"
+homelab_packages:
+  - curl
+  - git
+  - vim
+  - htop
+  - rsync
+  - ufw
+
+# Traefik (LAN-only reverse proxy, no TLS)
+# CUSTOMIZE: Set your email for ACME certificate notifications
+traefik_acme_email: "acme@example.com" # Only used if traefik_enable_acme is true
+
+# Home Assistant behind Traefik (file-provider routing, keeps host network for Bluetooth)
+ha_enable_traefik: true
+ha_privileged: true # Enable Bluetooth access
+ha_extra_devices:
+  - /dev/bus/usb:/dev/bus/usb:rwm
+
+# Pi-hole DNS server
+# IMPORTANT: Store actual password in vault file (see docs/security.md)
+# Generate with: ansible-vault encrypt_string 'your-password' --name 'pihole_password'
+pihole_password: "{{ vault_pihole_password }}"
+
+# Cloudflare Tunnel
+# IMPORTANT: Store actual token in vault file
+# Generate with: ansible-vault encrypt_string 'your-token' --name 'cloudflare_tunnel_token'
+cloudflare_tunnel_token: "{{ vault_cloudflare_tunnel_token }}"
+
+# Tailscale VPN
+# Generate auth key at: https://login.tailscale.com/admin/settings/keys
+# Store in vault: ansible-vault encrypt_string 'tskey-auth-...' --name 'vault_tailscale_auth_key'
+tailscale_auth_key: "{{ vault_tailscale_auth_key }}"
+tailscale_hostname: "homelab"
+# CUSTOMIZE: Set your LAN CIDR to expose to Tailscale
+tailscale_advertise_routes:
+  - "192.168.0.0/24" # Expose LAN to Tailscale network
+tailscale_accept_routes: true

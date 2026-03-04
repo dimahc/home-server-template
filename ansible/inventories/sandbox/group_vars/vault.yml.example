@@ -1,0 +1,20 @@
+---
+# Vault-encrypted secrets for sandbox environment
+#
+# This file should be encrypted with ansible-vault:
+#   ansible-vault encrypt ansible/inventories/sandbox/group_vars/vault.yml
+#
+# To edit:
+#   ansible-vault edit ansible/inventories/sandbox/group_vars/vault.yml
+#
+# To run playbooks with vault:
+#   ansible-playbook -i inventories/sandbox/hosts.yml playbooks/site.yml --ask-vault-pass
+
+# Pi-hole admin password
+vault_pihole_password: "CHANGE_ME_THEN_ENCRYPT"
+
+# Cloudflare Tunnel token (from Zero Trust dashboard)
+vault_cloudflare_tunnel_token: "CHANGE_ME_THEN_ENCRYPT"
+
+# Tailscale auth key (from https://login.tailscale.com/admin/settings/keys)
+vault_tailscale_auth_key: "tskey-auth-CHANGE_ME_THEN_ENCRYPT"

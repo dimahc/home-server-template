@@ -1,0 +1,5 @@
+---
+- name: Restart cloudflared
+  community.docker.docker_compose_v2:
+    project_src: "{{ cloudflare_tunnel_data_dir }}"
+    state: restarted

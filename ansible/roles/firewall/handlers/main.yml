@@ -1,0 +1,8 @@
+---
+# Firewall handlers
+# UFW manages its own state; no explicit restart handler needed
+# This file exists to satisfy role structure requirements
+
+- name: Reload UFW
+  community.general.ufw:
+    state: reloaded

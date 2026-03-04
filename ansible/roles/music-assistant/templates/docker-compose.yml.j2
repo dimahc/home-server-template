@@ -1,0 +1,35 @@
+services:
+  {{ mass_container_name | default('music-assistant') }}:
+    image: {{ mass_image | default('ghcr.io/music-assistant/server:2.3') }}
+    container_name: {{ mass_container_name | default('music-assistant') }}
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+      - NET_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    labels:
+      - "traefik.enable=false"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 512m
+    volumes:
+      - {{ mass_data_dir | default('/opt/homelab/music-assistant/data') }}:/data
+      - /run/dbus:/run/dbus:ro
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/snd:/dev/snd
+    environment:
+      TZ: {{ homelab_timezone | default('UTC') }}
+      PULSE_SERVER: unix:/run/user/{{ mass_pulse_uid | default('1000') }}/pulse/native
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8095/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

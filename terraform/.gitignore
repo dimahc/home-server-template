@@ -1,0 +1,9 @@
+# Terraform environment-specific .tfvars (e.g., terraform.tfvars, *.auto.tfvars)
+*.tfvars
+!*.tfvars.example
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

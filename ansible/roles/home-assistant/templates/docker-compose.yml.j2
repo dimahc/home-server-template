@@ -1,0 +1,54 @@
+services:
+  {{ ha_container_name }}:
+    image: {{ ha_image }}
+    container_name: {{ ha_container_name }}
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
+
+    network_mode: {{ ha_network_mode }}
+    labels:
+      - "traefik.enable=false"
+
+    environment:
+      - TZ={{ ha_timezone }}
+{% for k, v in (ha_env | dictsort) %}
+      - {{ k }}={{ v }}
+{% endfor %}
+      # Bluetooth audio support
+      - PULSE_SERVER=unix:/run/pulse/native
+
+    volumes:
+      - {{ ha_config_dir }}:/config
+      # DBus required for Bluetooth
+      - /run/dbus:/run/dbus:ro
+      # Audio (PulseAudio socket)
+      - /run/user/{{ ha_user_uid }}/pulse:/run/pulse:ro
+
+    devices:
+      # Laptop’s internal Bluetooth adapter (USB)
+      - /dev/bus/usb:/dev/bus/usb
+{% if ha_extra_devices | length > 0 %}
+{% for devmap in ha_extra_devices %}
+      - {{ devmap }}
+{% endfor %}
+{% endif %}
+
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    # Required for Bluetooth access inside container
+    privileged: true
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s

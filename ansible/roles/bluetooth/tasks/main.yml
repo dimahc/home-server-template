@@ -1,0 +1,68 @@
+---
+- name: Install Bluetooth packages
+  ansible.builtin.apt:
+    name: "{{ bluetooth_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure D-Bus service is running
+  ansible.builtin.systemd:
+    name: dbus
+    enabled: true
+    state: started
+
+- name: Unblock Bluetooth via rfkill
+  ansible.builtin.command: rfkill unblock bluetooth
+  changed_when: false
+
+- name: Check if Bluetooth controller exists
+  ansible.builtin.command: bluetoothctl list
+  register: bluetooth_controller
+  changed_when: false
+  failed_when: false
+
+- name: Fail if no Bluetooth controller detected
+  ansible.builtin.fail:
+    msg: "No Bluetooth controller detected on this host. Check hardware or USB adapter."
+  when: bluetooth_controller.stdout == ""
+
+- name: Configure Bluetooth auto power-on
+  ansible.builtin.lineinfile:
+    path: /etc/bluetooth/main.conf
+    regexp: "^#?AutoEnable"
+    line: "AutoEnable={{ bluetooth_auto_enable | ternary('true', 'false') }}"
+    insertafter: '^\[Policy\]'
+  notify: Restart bluetooth
+
+- name: Configure Bluetooth discoverable timeout
+  ansible.builtin.lineinfile:
+    path: /etc/bluetooth/main.conf
+    regexp: "^#?DiscoverableTimeout"
+    line: "DiscoverableTimeout = {{ bluetooth_discoverable_timeout }}"
+    insertafter: '^\[General\]'
+  notify: Restart bluetooth
+
+- name: Enable and start Bluetooth service
+  ansible.builtin.systemd:
+    name: "{{ bluetooth_service_name }}"
+    enabled: "{{ bluetooth_service_enabled }}"
+    state: started
+
+- name: Check Bluetooth power state
+  ansible.builtin.command: bluetoothctl show
+  register: bluetooth_status
+  changed_when: false
+
+- name: Power on Bluetooth adapter if disabled
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo -e "power on\nquit" | bluetoothctl
+  when:
+    - bluetooth_power_on
+    - "'Powered: no' in bluetooth_status.stdout"
+  register: bluetooth_power_on_result
+  changed_when: "'Changing power on succeeded' in bluetooth_power_on_result.stdout"
+
+- name: Display Bluetooth adapter status
+  ansible.builtin.debug:
+    msg: "{{ bluetooth_status.stdout_lines }}"

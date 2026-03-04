@@ -1,0 +1,77 @@
+---
+- name: Ensure Pi-hole directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  loop:
+    - "{{ pihole_data_dir }}"
+    - "{{ pihole_data_dir }}/etc-pihole"
+    - "{{ pihole_data_dir }}/etc-dnsmasq.d"
+
+- name: Remove stale Pi-hole v5 dnsmasq config files
+  ansible.builtin.file:
+    path: "{{ pihole_data_dir }}/etc-dnsmasq.d/{{ item }}"
+    state: absent
+  loop:
+    - 01-pihole.conf
+    - 02-custom.conf
+    - 06-rfc6761.conf
+  notify: Restart Pihole
+
+- name: Remove stale Pi-hole v5 custom.list file
+  ansible.builtin.file:
+    path: "{{ pihole_data_dir }}/etc-pihole/custom.list"
+    state: absent
+  notify: Restart Pihole
+
+- name: Deploy dnsmasq wildcard DNS for local domain
+  ansible.builtin.copy:
+    dest: "{{ pihole_data_dir }}/etc-dnsmasq.d/99-custom.conf"
+    content: |
+      # Wildcard DNS: resolve {{ traefik_domain }} and all subdomains to {{ traefik_backend_ip }}
+      address=/{{ traefik_domain }}/{{ traefik_backend_ip }}
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart Pihole
+
+- name: Render Pi-hole docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ pihole_data_dir }}/docker-compose.yml"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart Pihole
+
+- name: Deploy Pi-hole with Docker Compose v2
+  community.docker.docker_compose_v2:
+    project_src: "{{ pihole_data_dir }}"
+    pull: always
+
+- name: Ensure Traefik dynamic config directory exists
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: pihole_enable_traefik | bool
+
+- name: Deploy Traefik file-provider config for Pi-hole
+  ansible.builtin.template:
+    src: traefik-pihole.yml.j2
+    dest: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/pihole.yml"
+    mode: "0644"
+    owner: root
+    group: root
+  when: pihole_enable_traefik | bool
+
+- name: Remove Traefik config for Pi-hole when disabled
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/pihole.yml"
+    state: absent
+  when: not (pihole_enable_traefik | bool)

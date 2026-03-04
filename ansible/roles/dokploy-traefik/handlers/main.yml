@@ -1,0 +1,12 @@
+---
+- name: Restart Dokploy Traefik container
+  community.docker.docker_container:
+    name: dokploy-traefik
+    state: started
+    restart: true
+  listen: Restart Dokploy Traefik
+
+- name: Save Iptables Rules
+  ansible.builtin.shell:
+    cmd: sh -c 'iptables-save > /etc/iptables/rules.v4'
+  listen: Save Iptables

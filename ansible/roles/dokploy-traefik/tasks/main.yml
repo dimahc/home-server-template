@@ -1,0 +1,93 @@
+---
+# Deploy Traefik IP allowlist middleware for Dokploy
+# Restricts all services except public domains to Tailscale network
+
+- name: Ensure iptables-persistent is installed
+  ansible.builtin.package:
+    name: iptables-persistent
+    state: present
+
+- name: Ensure Traefik dynamic config directory exists
+  ansible.builtin.file:
+    path: "{{ dokploy_traefik_dynamic_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Tailscale IP allowlist middleware
+  ansible.builtin.template:
+    src: tailscale-middleware.yml.j2
+    dest: "{{ dokploy_traefik_dynamic_dir }}/tailscale-middleware.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Dokploy Traefik
+
+- name: Deploy Dokploy admin router with Tailscale middleware
+  ansible.builtin.template:
+    src: traefik-dokploy.yml.j2
+    dest: "{{ dokploy_traefik_dynamic_dir }}/traefik-dokploy.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Dokploy Traefik
+
+# ── Set Dokploy trusted origins for authentication ──
+# Dokploy uses BetterAuth which validates request origin.
+# All access URLs must be whitelisted or login returns "Invalid origin".
+
+- name: Set BETTER_AUTH_TRUSTED_ORIGINS on Dokploy service
+  ansible.builtin.command:
+    cmd: >-
+      docker service update
+      --env-add BETTER_AUTH_TRUSTED_ORIGINS={{ dokploy_trusted_origins | join(',') }}
+      --update-order stop-first
+      dokploy
+  changed_when: true
+
+# ── Block Docker-exposed ports from public access ──
+# Docker bypasses UFW by inserting its own iptables FORWARD rules.
+# These DOCKER-USER rules drop external traffic to admin ports
+# while keeping localhost and Tailscale access intact.
+# Order matters: ACCEPT rules for tailscale0 MUST come before DROP.
+
+- name: Allow Tailscale access to Dokploy admin port (3000)
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    protocol: tcp
+    destination_port: "3000"
+    in_interface: tailscale0
+    jump: ACCEPT
+    comment: "Allow Tailscale access to Dokploy admin"
+  notify: Save Iptables
+
+- name: Allow Tailscale access to Traefik dashboard (8080)
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    protocol: tcp
+    destination_port: "8080"
+    in_interface: tailscale0
+    jump: ACCEPT
+    comment: "Allow Tailscale access to Traefik dashboard"
+  notify: Save Iptables
+
+- name: Block external access to Dokploy admin port (3000)
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    protocol: tcp
+    destination_port: "3000"
+    in_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+    jump: DROP
+    comment: "Block public access to Dokploy admin"
+  notify: Save Iptables
+
+- name: Block external access to Traefik dashboard (8080)
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    protocol: tcp
+    destination_port: "8080"
+    in_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+    jump: DROP
+    comment: "Block public access to Traefik dashboard"
+  notify: Save Iptables

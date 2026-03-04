@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# Traefik file-provider config for Music Assistant (host network mode)
+http:
+  routers:
+    music-assistant:
+      rule: "Host(`{{ mass_traefik_subdomain }}.{{ traefik_domain }}`)"
+      entryPoints:
+        - {{ mass_traefik_entrypoints }}
+      service: music-assistant
+
+  services:
+    music-assistant:
+      loadBalancer:
+        servers:
+          - url: "http://{{ traefik_backend_ip }}:{{ mass_web_port }}"

@@ -1,0 +1,82 @@
+---
+- name: Create Alexa Skill directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ alexa_skill_compose_dir }}"
+    - "{{ alexa_skill_data_dir }}"
+    - "{{ alexa_skill_secrets_dir }}"
+    - "{{ alexa_skill_ask_data_dir }}"
+
+- name: Create app username secret file
+  ansible.builtin.copy:
+    content: "{{ alexa_skill_app_username }}"
+    dest: "{{ alexa_skill_secrets_dir }}/app_username.txt"
+    owner: root
+    group: root
+    mode: "0600"
+  when: alexa_skill_app_username | length > 0
+  no_log: true
+  notify: Restart alexa-skill
+
+- name: Create app password secret file
+  ansible.builtin.copy:
+    content: "{{ alexa_skill_app_password }}"
+    dest: "{{ alexa_skill_secrets_dir }}/app_password.txt"
+    owner: root
+    group: root
+    mode: "0600"
+  when: alexa_skill_app_password | length > 0
+  no_log: true
+  notify: Restart alexa-skill
+
+- name: Deploy Alexa Skill docker-compose
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ alexa_skill_compose_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart alexa-skill
+
+- name: Start Alexa Skill container
+  community.docker.docker_compose_v2:
+    project_src: "{{ alexa_skill_compose_dir }}"
+    state: present
+    pull: always
+
+- name: Ensure Traefik dynamic config directory exists
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: alexa_skill_enable_traefik | bool
+
+- name: Deploy Traefik file-provider config for Alexa Skill
+  ansible.builtin.template:
+    src: traefik-alexa-skill.yml.j2
+    dest: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/alexa-skill.yml"
+    mode: "0644"
+    owner: root
+    group: root
+  when: alexa_skill_enable_traefik | bool
+
+- name: Remove Traefik config for Alexa Skill when disabled
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/alexa-skill.yml"
+    state: absent
+  when: not (alexa_skill_enable_traefik | bool)
+
+- name: Display Alexa Skill info
+  ansible.builtin.debug:
+    msg: >-
+      Alexa Skill prototype running at http://localhost:{{ alexa_skill_port }}.
+      Setup UI: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ alexa_skill_port }}/setup
+      Status: http://{{ ansible_default_ipv4.address | default('localhost') }}:{{ alexa_skill_port }}/status
+      Public endpoint: https://{{ alexa_skill_hostname }}

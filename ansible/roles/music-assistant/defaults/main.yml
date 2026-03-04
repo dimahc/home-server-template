@@ -1,0 +1,29 @@
+---
+# Music Assistant configuration
+mass_image: "ghcr.io/music-assistant/server:2.7.9"
+mass_container_name: "music-assistant"
+mass_compose_dir: "/opt/homelab/music-assistant"
+mass_data_dir: "/opt/homelab/music-assistant/data"
+mass_web_port: 8095
+mass_stream_port: 8097
+# UID of the user whose PulseAudio session has audio output access
+mass_pulse_uid: "1000"
+
+# Snapcast client for local audio output
+mass_snapclient_enabled: true
+mass_snapclient_package: "snapclient"
+mass_snapclient_host: "127.0.0.1"
+mass_snapclient_port: 1704
+# User whose PulseAudio session has Bluetooth audio access
+# CUSTOMIZE: Override with your local user that has audio access
+mass_snapclient_user: "homelab"
+mass_snapclient_group: "homelab"
+# PulseAudio sink (empty = default sink). Examples:
+#   bluez_sink.28_D2_C6_E1_4C_AC.a2dp_sink  (Bluetooth speaker)
+#   alsa_output.pci-0000_00_1f.3.analog-stereo  (onboard audio)
+mass_snapclient_pulse_sink: ""
+
+# Traefik file-provider routing (LAN access)
+mass_enable_traefik: true
+mass_traefik_subdomain: "music"
+mass_traefik_entrypoints: "web"

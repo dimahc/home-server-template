@@ -1,0 +1,44 @@
+---
+- name: Ensure Traefik directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  loop:
+    - "{{ traefik_dir }}"
+    - "{{ traefik_config_dir }}"
+    - "{{ traefik_dynamic_config_dir }}"
+
+- name: Ensure Docker network exists
+  community.docker.docker_network:
+    name: "{{ traefik_network }}"
+    state: present
+
+- name: Create acme.json with correct permissions
+  ansible.builtin.copy:
+    dest: "{{ traefik_acme_storage }}"
+    content: "{}\n"
+    force: false
+    mode: "0600"
+    owner: root
+    group: root
+  when: traefik_enable_acme | bool
+
+- name: Render Traefik docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ traefik_dir }}/docker-compose.yml"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart Traefik
+
+- name: Deploy Traefik with Docker Compose v2
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_dir }}"
+    files:
+      - docker-compose.yml
+    state: present
+    pull: always

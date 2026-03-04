@@ -1,0 +1,6 @@
+---
+# Cloudflare Tunnel configuration
+cloudflare_tunnel_image: "cloudflare/cloudflared:2026.2.0"
+cloudflare_tunnel_token: "" # Set this in group_vars/all.yml or inventory
+cloudflare_tunnel_name: "homelab-tunnel"
+cloudflare_tunnel_data_dir: "/opt/homelab/cloudflared"

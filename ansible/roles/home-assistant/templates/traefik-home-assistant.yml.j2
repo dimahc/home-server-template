@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# Traefik file-provider config for Home Assistant (host network mode)
+http:
+  routers:
+    homeassistant:
+      rule: "Host(`{{ ha_traefik_subdomain }}.{{ traefik_domain }}`)"
+      entryPoints:
+        - {{ ha_traefik_entrypoints }}
+      service: homeassistant
+
+  services:
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "{{ ha_internal_url }}"

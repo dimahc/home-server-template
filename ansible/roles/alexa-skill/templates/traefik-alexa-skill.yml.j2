@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# Traefik file-provider config for Alexa Skill (host network mode)
+http:
+  routers:
+    alexa-skill:
+      rule: "Host(`{{ alexa_skill_traefik_subdomain }}.{{ traefik_domain }}`)"
+      entryPoints:
+        - {{ alexa_skill_traefik_entrypoints }}
+      service: alexa-skill
+
+  services:
+    alexa-skill:
+      loadBalancer:
+        servers:
+          - url: "http://{{ traefik_backend_ip }}:{{ alexa_skill_port }}"

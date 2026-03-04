@@ -1,0 +1,45 @@
+---
+- name: Configure inventory nodes
+  hosts: all
+  become: true
+  tags:
+    - base
+    - common
+  roles:
+    - common
+    - role: firewall
+      tags: [firewall, security]
+    - role: tailscale
+      tags: [tailscale, vpn, security]
+    - role: bluetooth
+      tags: [bluetooth]
+
+- name: Secure Dokploy Traefik on remote VPS
+  hosts: remote_vps
+  become: true
+  tags:
+    - dokploytraefik
+    - security
+  roles:
+    - role: dokploy-traefik
+      tags: [dokploytraefik, traefik, security]
+
+- name: Deploy Docker apps on docker hosts
+  hosts: docker_hosts
+  become: true
+  tags:
+    - docker
+    - apps
+  roles:
+    - role: traefik
+      tags: [traefik, proxy]
+    - role: pihole
+      tags: [pihole, dns]
+    - role: home-assistant
+      tags: [home-assistant, homeassistant]
+    - role: music-assistant
+      tags: [music-assistant, musicassistant, audio]
+    - role: cloudflare-tunnel
+      tags: [cloudflaretunnel, cloudflare, tunnel]
+    - role: alexa-skill
+      tags: [alexaskill, alexa, musicassistant]

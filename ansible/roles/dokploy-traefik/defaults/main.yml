@@ -1,0 +1,42 @@
+---
+# Dokploy Traefik middleware configuration
+# Deploys dynamic Traefik config to restrict services to Tailscale network
+
+# Traefik dynamic config directory (Dokploy default)
+dokploy_traefik_dynamic_dir: /etc/dokploy/traefik/dynamic
+
+# Tailscale CGNAT IP ranges — only these can access protected services
+tailscale_allowed_ranges:
+  - "100.64.0.0/10" # Tailscale IPv4 CGNAT
+  - "fd7a:115c:a1e0::/48" # Tailscale IPv6
+  - "127.0.0.1/8" # localhost
+
+# Domains that should remain PUBLIC (no IP restriction)
+# All other Traefik-routed services will be Tailscale-only
+# CUSTOMIZE: Override in group_vars with your domain
+dokploy_public_domains:
+  - "example.com"
+  - "www.example.com"
+
+# Dokploy domain used in Traefik router and trusted origins
+# CUSTOMIZE: Override in group_vars with your domain
+dokploy_domain: "dokploy.example.com"
+
+# VPS public IP (used in trusted origins)
+# Override in group_vars via vault: vault_vps_public_ip
+dokploy_public_ip: "{{ vault_vps_public_ip }}"
+
+# Dokploy admin port
+dokploy_admin_port: 3000
+
+# Tailscale IP of the VPS
+# CUSTOMIZE: Override in group_vars with your Tailscale IP
+dokploy_tailscale_ip: "100.64.0.1"
+
+# BETTER_AUTH_TRUSTED_ORIGINS — all origins Dokploy should accept login from
+# Constructed from the variables above
+dokploy_trusted_origins:
+  - "http://localhost:{{ dokploy_admin_port }}"
+  - "https://{{ dokploy_domain }}"
+  - "http://{{ dokploy_public_ip }}:{{ dokploy_admin_port }}"
+  - "http://{{ dokploy_tailscale_ip }}:{{ dokploy_admin_port }}"

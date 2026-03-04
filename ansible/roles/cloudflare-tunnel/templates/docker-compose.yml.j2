@@ -1,0 +1,24 @@
+services:
+  cloudflared:
+    image: {{ cloudflare_tunnel_image }}
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token {{ cloudflare_tunnel_token }}
+    network_mode: host
+    labels:
+      - "traefik.enable=false"
+
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+        reservations:
+          memory: 64m
+    environment:
+      TZ: {{ homelab_timezone | default('UTC') }}
+    healthcheck:
+      test: ["CMD", "cloudflared", "version"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

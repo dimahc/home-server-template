@@ -1,0 +1,108 @@
+---
+- name: Create Music Assistant directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ mass_compose_dir }}"
+    - "{{ mass_data_dir }}"
+
+- name: Deploy Music Assistant docker-compose
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ mass_compose_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart mass
+
+- name: Start Music Assistant container
+  community.docker.docker_compose_v2:
+    project_src: "{{ mass_compose_dir }}"
+    state: present
+    pull: always
+
+- name: Ensure Traefik dynamic config directory exists
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: mass_enable_traefik | bool
+
+- name: Deploy Traefik file-provider config for Music Assistant
+  ansible.builtin.template:
+    src: traefik-music-assistant.yml.j2
+    dest: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/music-assistant.yml"
+    mode: "0644"
+    owner: root
+    group: root
+  when: mass_enable_traefik | bool
+
+- name: Remove Traefik config for Music Assistant when disabled
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/music-assistant.yml"
+    state: absent
+  when: not (mass_enable_traefik | bool)
+
+- name: Remove stale music-assistant Traefik config (pre-rename)
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/music-assistant.yml"
+    state: absent
+
+- name: Display Music Assistant info
+  ansible.builtin.debug:
+    msg: "Music Assistant is available at http://localhost:{{ mass_web_port }}"
+
+# --- Snapcast client for local audio output ---
+- name: Install snapclient for local audio playback
+  ansible.builtin.apt:
+    name: "{{ mass_snapclient_package }}"
+    state: present
+  become: true
+  when: mass_snapclient_enabled | default(false)
+
+- name: Disable default snapclient service
+  ansible.builtin.systemd:
+    name: snapclient
+    state: stopped
+    enabled: false
+  become: true
+  when: mass_snapclient_enabled | default(false)
+  failed_when: false
+
+- name: Resolve snapclient user UID
+  ansible.builtin.command:
+    cmd: "id -u {{ mass_snapclient_user }}"
+  register: snapclient_uid_result
+  changed_when: false
+  when: mass_snapclient_enabled | default(false)
+
+- name: Set snapclient UID fact
+  ansible.builtin.set_fact:
+    mass_snapclient_uid: "{{ snapclient_uid_result.stdout }}"
+  when: mass_snapclient_enabled | default(false)
+
+- name: Deploy snapclient-ma systemd service
+  ansible.builtin.template:
+    src: snapclient-ma.service.j2
+    dest: /etc/systemd/system/snapclient-ma.service
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: Restart snapclient
+  when: mass_snapclient_enabled | default(false)
+
+- name: Enable and start snapclient-ma service
+  ansible.builtin.systemd:
+    name: snapclient-ma
+    state: started
+    enabled: true
+    daemon_reload: true
+  become: true
+  when: mass_snapclient_enabled | default(false)

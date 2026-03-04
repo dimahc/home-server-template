@@ -1,0 +1,12 @@
+---
+# SSH keys to deploy to sandbox VMs
+ssh_authorized_keys:
+  - user: vagrant
+    keys:
+      # - "ssh-ed25519 AAAAC3... your-key-name"
+
+# SSH daemon hardening (less strict for sandbox)
+ssh_permit_root_login: "no"
+ssh_password_authentication: "yes" # Allow password for sandbox testing
+ssh_pubkey_authentication: "yes"
+ssh_port: 22

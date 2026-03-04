@@ -1,0 +1,12 @@
+---
+- name: Restart mass
+  community.docker.docker_compose_v2:
+    project_src: "{{ mass_compose_dir }}"
+    state: restarted
+
+- name: Restart snapclient
+  ansible.builtin.systemd:
+    name: snapclient-ma
+    state: restarted
+    daemon_reload: true
+  when: mass_snapclient_enabled | default(false)

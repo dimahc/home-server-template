@@ -1,0 +1,104 @@
+---
+- name: Get PulseAudio user UID
+  ansible.builtin.command:
+    cmd: id -u {{ ansible_user }}
+  register: ha_pulse_user_uid
+  changed_when: false
+
+- name: Set ha_user_uid fact
+  ansible.builtin.set_fact:
+    ha_user_uid: "{{ ha_pulse_user_uid.stdout }}"
+
+- name: Ensure compose and config directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  loop:
+    - "{{ ha_compose_dir }}"
+    - "{{ ha_config_dir }}"
+    - "{{ ha_config_dir }}/themes"
+
+- name: Deploy configuration.yaml
+  ansible.builtin.template:
+    src: configuration.yaml.j2
+    dest: "{{ ha_config_dir }}/configuration.yaml"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart Home Assistant
+
+- name: Ensure HA auto-generated files exist
+  ansible.builtin.copy:
+    content: "[]"
+    dest: "{{ ha_config_dir }}/{{ item }}"
+    mode: "0644"
+    owner: root
+    group: root
+    force: false
+  loop:
+    - automations.yaml
+    - scripts.yaml
+    - scenes.yaml
+
+- name: Ensure dashboards directory exists
+  ansible.builtin.file:
+    path: "{{ ha_config_dir }}/dashboards"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: ha_dashboard_files | length > 0
+
+- name: Copy dashboard YAML files
+  ansible.builtin.copy:
+    src: "dashboards/{{ item }}"
+    dest: "{{ ha_config_dir }}/dashboards/{{ item }}"
+    mode: "0644"
+    owner: root
+    group: root
+  loop: "{{ ha_dashboard_files }}"
+  when: ha_dashboard_files | length > 0
+
+- name: Ensure Traefik dynamic config directory exists
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: ha_enable_traefik | bool
+
+- name: Deploy Traefik file-provider config for Home Assistant
+  ansible.builtin.template:
+    src: traefik-home-assistant.yml.j2
+    dest: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/home-assistant.yml"
+    mode: "0644"
+    owner: root
+    group: root
+  when: ha_enable_traefik | bool
+
+- name: Remove Traefik file-provider config when disabled
+  ansible.builtin.file:
+    path: "{{ traefik_dynamic_config_dir | default('/opt/homelab/traefik/dynamic') }}/home-assistant.yml"
+    state: absent
+  when: not (ha_enable_traefik | bool)
+
+- name: Render Home Assistant docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ ha_compose_dir }}/docker-compose.yml"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart Home Assistant
+
+- name: Deploy Home Assistant with Docker Compose v2
+  community.docker.docker_compose_v2:
+    project_src: "{{ ha_compose_dir }}"
+    files:
+      - docker-compose.yml
+    state: present
+    pull: always

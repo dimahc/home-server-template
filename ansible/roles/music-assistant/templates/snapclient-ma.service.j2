@@ -1,0 +1,28 @@
+# {{ ansible_managed }}
+# Snapcast client connecting to Music Assistant's built-in Snapcast server
+# Runs as {{ mass_snapclient_user }} to access PulseAudio session (Bluetooth audio)
+[Unit]
+Description=Snapcast client for Music Assistant
+After=network-online.target pulseaudio.service music-assistant.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ mass_snapclient_user }}
+Group={{ mass_snapclient_group }}
+Environment=PULSE_SERVER=unix:/run/user/{{ mass_snapclient_uid }}/pulse/native
+Environment=XDG_RUNTIME_DIR=/run/user/{{ mass_snapclient_uid }}
+ExecStart=/usr/bin/snapclient \
+  --host {{ mass_snapclient_host }} \
+  --port {{ mass_snapclient_port }} \
+{% if mass_snapclient_pulse_sink %}
+  --player pulse:sink={{ mass_snapclient_pulse_sink }} \
+{% else %}
+  --player pulse \
+{% endif %}
+  --logsink system
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

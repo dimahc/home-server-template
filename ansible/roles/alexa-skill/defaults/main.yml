@@ -1,0 +1,37 @@
+---
+# Music Assistant Alexa Skill Prototype
+# https://github.com/alams154/music-assistant-alexa-skill-prototype
+# CUSTOMIZE: Check for latest version at the GitHub repo
+alexa_skill_image: "ghcr.io/alams154/music-assistant-skill:0.1.0"
+alexa_skill_container_name: "music-assistant-alexa-skill"
+alexa_skill_compose_dir: "/opt/homelab/alexa-skill"
+alexa_skill_data_dir: "/opt/homelab/alexa-skill/data"
+alexa_skill_secrets_dir: "/opt/homelab/alexa-skill/secrets"
+alexa_skill_ask_data_dir: "/opt/homelab/alexa-skill/ask_data"
+
+# Port the Flask app listens on inside the container
+alexa_skill_port: 5000
+
+# Public HTTPS hostname for the Alexa skill endpoint (Amazon must reach this)
+# CUSTOMIZE: Override in group_vars with your domain
+alexa_skill_hostname: "ma-alexa.example.com"
+
+# Music Assistant streaming hostname (HTTPS, for non-display Alexa devices)
+# Points to MA streaming port 8097 via reverse proxy
+# CUSTOMIZE: Override in group_vars with your domain
+alexa_skill_ma_hostname: "ma.example.com"
+
+# Skill locale (e.g. en-US, en-GB, fr-FR, de-DE)
+alexa_skill_locale: "fr-FR"
+
+# AWS region for ASK CLI operations
+alexa_skill_aws_region: "eu-west-1"
+
+# Basic auth for the skill web UI/API (store in vault)
+alexa_skill_app_username: "{{ vault_alexa_skill_app_username | default('') }}"
+alexa_skill_app_password: "{{ vault_alexa_skill_app_password | default('') }}"
+
+# Traefik file-provider routing (LAN access)
+alexa_skill_enable_traefik: true
+alexa_skill_traefik_subdomain: "alexa"
+alexa_skill_traefik_entrypoints: "web"

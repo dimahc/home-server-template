@@ -1,0 +1,19 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: dimahc
+  description: Traefik reverse proxy with ACME TLS
+  company: homelab
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+        - trixie
+  galaxy_tags:
+    - traefik
+    - proxy
+    - docker

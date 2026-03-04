@@ -1,0 +1,19 @@
+# Cloudflare API token — create at https://dash.cloudflare.com/profile/api-tokens
+# Permissions needed: Zone > DNS > Edit (for dimahc.dev zone only)
+cloudflare_api_token = "CHANGE_ME"
+
+# Zone ID — found on the dimahc.dev Overview page in Cloudflare dashboard (right sidebar)
+cloudflare_zone_id = "CHANGE_ME"
+
+# OVH VPS public IP
+vps_ipv4 = "CHANGE_ME"
+
+# Root domain
+domain = "dimahc.dev"
+
+# Cloudflare Tunnel UUID — found in Zero Trust → Networks → Tunnels
+# Used to create CNAME records for tunnel-routed subdomains (ma-alexa, ma)
+cloudflare_tunnel_id = "CHANGE_ME"
+
+# Cloudflare Account ID — found in Zero Trust dashboard or decoded from tunnel token
+cloudflare_account_id = "CHANGE_ME"

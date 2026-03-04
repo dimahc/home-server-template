@@ -1,0 +1,1615 @@
+title: 🏠 Maison
+views:
+  - title: Accueil
+    path: home
+    icon: mdi:home
+    cards:
+      - type: custom:mushroom-title-card
+        title: >-
+          {% set h = now().hour %} {% if h < 6 %}Bonne nuit 🌙 {% elif h < 12
+          %}Bonjour ☀️ {% elif h < 18 %}Bon après-midi 🌤️ {% else %}Bonsoir
+          🌆{% endif %}
+        subtitle: "{{ now().strftime('%A %d %B %Y · %H:%M') }}"
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: weather
+            entity: weather.forecast_maison
+            show_conditions: true
+            show_temperature: true
+          - type: template
+            icon: mdi:sofa
+            content: Salon
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/salon
+            icon_color: orange
+          - type: template
+            icon: mdi:bed
+            content: Chambre
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/chambre
+            icon_color: blue
+          - type: template
+            icon: mdi:silverware-fork-knife
+            content: Cuisine
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/cuisine
+            icon_color: pink
+          - type: template
+            icon: mdi:thermostat
+            content: Climat
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/climat
+            icon_color: red
+          - type: template
+            icon: mdi:music
+            content: Média
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/media
+            icon_color: deep-purple
+          - type: template
+            icon: mdi:robot-vacuum
+            content: Aspiro
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/vacuum
+            icon_color: teal
+      - type: weather-forecast
+        entity: weather.forecast_maison
+        show_forecast: true
+        forecast_type: daily
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 📈 Tendances climat
+      - type: history-graph
+        entities:
+          - entity: sensor.echo_dot_salon_temperature
+            name: Température
+          - entity: sensor.humidifier_humidity
+            name: Humidité
+        hours_to_show: 24
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: history-graph
+        entities:
+          - entity: sensor.core_300s_series_pm2_5
+            name: PM2.5 (µg/m³)
+        hours_to_show: 24
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 💡 Lumières
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.living_room_light
+            name: Salon
+            icon: mdi:floor-lamp
+            use_light_color: true
+            show_brightness_control: true
+            show_color_control: true
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  border-radius: 16px;
+                  background: {% if is_state('light.living_room_light','on') %}rgba(255,180,50,0.15){% else %}var(--ha-card-background){% endif %};
+                }
+          - type: custom:mushroom-light-card
+            entity: light.bedroom_light
+            name: Chambre
+            icon: mdi:lamp
+            use_light_color: true
+            show_brightness_control: true
+            show_color_control: true
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  border-radius: 16px;
+                  background: {% if is_state('light.bedroom_light','on') %}rgba(100,150,255,0.15){% else %}var(--ha-card-background){% endif %};
+                }
+          - type: custom:mushroom-light-card
+            entity: light.kitchen_light
+            name: Cuisine
+            icon: mdi:ceiling-light
+            use_light_color: true
+            show_brightness_control: true
+            show_color_control: true
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  border-radius: 16px;
+                  background: {% if is_state('light.kitchen_light','on') %}rgba(255,130,200,0.15){% else %}var(--ha-card-background){% endif %};
+                }
+      - type: custom:mushroom-template-card
+        primary: Tout éteindre
+        icon: mdi:lightbulb-group-off
+        icon_color: red
+        layout: horizontal
+        tap_action:
+          action: perform-action
+          perform_action: homeassistant.turn_on
+          target:
+            entity_id: scene.turn_off_all_lights
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🏠 Pièces
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Salon
+            secondary: >-
+              🌡️ {{ states('sensor.echo_dot_salon_temperature') }}°C · 💡 {{
+              states('sensor.echo_dot_salon_eclairement') }} lux
+            icon: mdi:sofa
+            icon_color: orange
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/salon
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: Chambre
+            secondary: >-
+              {% if not is_state('media_player.echo_pop_chambre','standby') and
+              not is_state('media_player.echo_pop_chambre','idle') %} 🎵 {{
+              state_attr('media_player.echo_pop_chambre','media_title') or
+              'Lecture…' }} {% else %}Calme{% endif %}
+            icon: mdi:bed
+            icon_color: blue
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/chambre
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: Cuisine
+            secondary: >-
+              {{ '💡 Allumée' if is_state('light.kitchen_light','on') else '💡
+              Éteinte' }}
+            icon: mdi:silverware-fork-knife
+            icon_color: pink
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/cuisine
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: Aspirateur
+            secondary: >-
+              {{ states('vacuum.x50_ultra_complete') | capitalize }} · 🔋 {{
+              states('sensor.x50_ultra_complete_battery_level') }}%
+            icon: mdi:robot-vacuum
+            icon_color: >-
+              {% if is_state('vacuum.x50_ultra_complete','cleaning') %}green {%
+              elif is_state('vacuum.x50_ultra_complete','docked') %}blue {% else
+              %}grey{% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/vacuum
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: Climat
+            secondary: >-
+              🔥 {{ states('climate.heater_heater') | capitalize }} · 💨 {{
+              states('sensor.core_300s_series_pm2_5') }} PM2.5 · 💧 {{
+              states('sensor.humidifier_humidity') }}%
+            icon: mdi:thermostat
+            icon_color: >-
+              {% if not is_state('climate.heater_heater','off') %}red {% elif
+              is_state('fan.core_300s_series','on') %}cyan {% else %}grey{%
+              endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/climat
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: media_player.echo_dot_salon
+            state_not: standby
+          - condition: state
+            entity: media_player.echo_dot_salon
+            state_not: idle
+        card:
+          type: custom:mushroom-media-player-card
+          entity: media_player.echo_dot_salon
+          name: 🔊 Echo Dot — Salon
+          use_media_info: true
+          show_volume_level: true
+          media_controls:
+            - play_pause_stop
+            - previous
+            - next
+          volume_controls:
+            - volume_set
+          card_mod:
+            style: |
+              ha-card { border-radius: 16px; }
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: media_player.echo_pop_chambre
+            state_not: standby
+          - condition: state
+            entity: media_player.echo_pop_chambre
+            state_not: idle
+        card:
+          type: custom:mushroom-media-player-card
+          entity: media_player.echo_pop_chambre
+          name: 🔊 Echo Pop — Chambre
+          use_media_info: true
+          show_volume_level: true
+          media_controls:
+            - play_pause_stop
+            - previous
+            - next
+          volume_controls:
+            - volume_set
+          card_mod:
+            style: |
+              ha-card { border-radius: 16px; }
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: template
+            icon: mdi:cellphone
+            icon_color: >-
+              {% if states('sensor.pixel_9_pro_xl_battery_level')|int(0) > 50
+              %}green {% elif
+              states('sensor.pixel_9_pro_xl_battery_level')|int(0) > 20
+              %}amber {% else %}red{% endif %}
+            content: "{{ states('sensor.pixel_9_pro_xl_battery_level') }}%"
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/phone
+          - type: template
+            icon: mdi:wifi
+            icon_color: cyan
+            content: "{{ states('sensor.pixel_9_pro_xl_bluetooth_connection') }}"
+          - type: template
+            icon: >-
+              {% if is_state('sun.sun','above_horizon') %}mdi:weather-sunny{%
+              else %}mdi:weather-night{% endif %}
+            icon_color: >-
+              {% if is_state('sun.sun','above_horizon') %}amber{% else
+              %}indigo{% endif %}
+            content: "{{ state_attr('sun.sun','elevation')|round(1) }}°"
+          - type: template
+            icon: mdi:server
+            icon_color: teal
+            content: Système
+            tap_action:
+              action: navigate
+              navigation_path: /super-dashboard/system
+  - title: Salon
+    path: salon
+    icon: mdi:sofa
+    cards:
+      - type: custom:mushroom-title-card
+        title: Salon
+        subtitle: Espace de vie
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: "{{ states('sensor.echo_dot_salon_temperature') }}°C"
+            secondary: Température
+            icon: mdi:thermometer
+            icon_color: >-
+              {% set t =
+              states('sensor.echo_dot_salon_temperature')|float(0) %} {% if t >
+              26 %}red{% elif t > 22 %}orange{% elif t > 18 %}green{% else
+              %}blue{% endif %}
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: "{{ states('sensor.echo_dot_salon_eclairement') }} lux"
+            secondary: Luminosité
+            icon: mdi:brightness-6
+            icon_color: >-
+              {% set l = states('sensor.echo_dot_salon_eclairement')|float(0) %}
+              {% if l > 200 %}yellow{% elif l > 50 %}amber{% else %}grey{%
+              endif %}
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: history-graph
+        entities:
+          - entity: sensor.echo_dot_salon_temperature
+            name: Température (°C)
+          - entity: sensor.echo_dot_salon_eclairement
+            name: Luminosité (lux)
+        hours_to_show: 24
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: custom:mushroom-light-card
+        entity: light.living_room_light
+        name: Lumière du salon
+        icon: mdi:floor-lamp
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 16px;
+              background: {% if is_state('light.living_room_light','on') %}rgba(255,180,50,0.12){% else %}var(--ha-card-background){% endif %};
+            }
+      - type: custom:mushroom-media-player-card
+        entity: media_player.echo_dot_salon
+        name: Echo Dot
+        icon: mdi:speaker
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_mute
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: entity
+            entity: sensor.echo_dot_salon_next_alarm
+            icon: mdi:alarm
+          - type: entity
+            entity: sensor.echo_dot_salon_next_timer
+            icon: mdi:timer-outline
+          - type: entity
+            entity: sensor.echo_dot_salon_next_reminder
+            icon: mdi:bell-outline
+          - type: entity
+            entity: switch.echo_dot_salon_do_not_disturb_switch
+            icon: mdi:bell-off
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 📺 Écrans
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-media-player-card
+            entity: media_player.salon_tv_2
+            name: Salon TV
+            icon: mdi:television
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - on_off
+              - play_pause_stop
+            volume_controls:
+              - volume_mute
+              - volume_set
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-media-player-card
+            entity: media_player.smart_tv_pro
+            name: Smart TV Pro
+            icon: mdi:television-classic
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - on_off
+              - play_pause_stop
+            volume_controls:
+              - volume_mute
+              - volume_set
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: remote.salon_tv
+            name: Télécommande Salon
+            icon: mdi:remote
+            icon_color: cyan
+            tap_action:
+              action: more-info
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: remote.smart_tv_pro
+            name: Télécommande Smart
+            icon: mdi:remote
+            icon_color: cyan
+            tap_action:
+              action: more-info
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: custom:mushroom-media-player-card
+        entity: media_player.hy300_ultra_5521
+        name: 🎬 Projecteur HY300
+        icon: mdi:projector
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - on_off
+          - play_pause_stop
+        volume_controls:
+          - volume_mute
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+  - title: Chambre
+    path: chambre
+    icon: mdi:bed
+    cards:
+      - type: custom:mushroom-title-card
+        title: Chambre
+        subtitle: Espace nuit
+      - type: custom:mushroom-light-card
+        entity: light.bedroom_light
+        name: Lumière de la chambre
+        icon: mdi:lamp
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 16px;
+              background: {% if is_state('light.bedroom_light','on') %}rgba(100,150,255,0.12){% else %}var(--ha-card-background){% endif %};
+            }
+      - type: custom:mushroom-media-player-card
+        entity: media_player.echo_pop_chambre
+        name: Echo Pop
+        icon: mdi:speaker
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_mute
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: entity
+            entity: sensor.echo_pop_chambre_next_alarm
+            icon: mdi:alarm
+          - type: entity
+            entity: sensor.echo_pop_chambre_next_timer
+            icon: mdi:timer-outline
+          - type: entity
+            entity: sensor.echo_pop_chambre_next_reminder
+            icon: mdi:bell-outline
+          - type: entity
+            entity: switch.echo_pop_chambre_do_not_disturb_switch
+            icon: mdi:bell-off
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 📺 Télévision
+      - type: custom:mushroom-media-player-card
+        entity: media_player.living_room_streamer
+        name: Téléviseur de la chambre
+        icon: mdi:television
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - on_off
+          - play_pause_stop
+        volume_controls:
+          - volume_mute
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-entity-card
+        entity: remote.televiseur_de_la_chambre
+        name: Télécommande
+        icon: mdi:remote
+        icon_color: cyan
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🎧 Casque
+      - type: custom:mushroom-media-player-card
+        entity: media_player.abdoul_s_wh_1000xm4
+        name: Sony WH-1000XM4
+        icon: mdi:headphones
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🧹 Aspirateur
+      - type: custom:mushroom-template-card
+        primary: Aspirateur Chambre
+        secondary: >-
+          {{ states('vacuum.aspirateur') | capitalize }} · 🔋 {{
+          states('sensor.aspirateur_batterie') }}%
+        icon: mdi:robot-vacuum-variant
+        icon_color: teal
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.aspirateur_batterie
+            name: Batterie
+            icon: mdi:battery
+            icon_color: green
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.aspirateur_zone_de_nettoyage
+            name: Zone nettoyée
+            icon: mdi:texture-box
+            icon_color: blue
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+  - title: Cuisine
+    path: cuisine
+    icon: mdi:silverware-fork-knife
+    cards:
+      - type: custom:mushroom-title-card
+        title: Cuisine
+        subtitle: Espace repas
+      - type: custom:mushroom-light-card
+        entity: light.kitchen_light
+        name: Lumière de la cuisine
+        icon: mdi:ceiling-light
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 16px;
+              background: {% if is_state('light.kitchen_light','on') %}rgba(255,130,200,0.12){% else %}var(--ha-card-background){% endif %};
+            }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🛒 Liste d'achats
+      - type: todo-list
+        entity: todo.liste_dachats
+        title: ""
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+  - title: Climat
+    path: climat
+    icon: mdi:thermostat
+    cards:
+      - type: custom:mushroom-title-card
+        title: Climat
+        subtitle: Chauffage · Air · Humidité
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🔥 Chauffage
+      - type: custom:mushroom-climate-card
+        entity: climate.heater_heater
+        name: Chauffage Dreo
+        icon: mdi:radiator
+        show_temperature_control: true
+        hvac_modes:
+          - "off"
+          - heat
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 16px;
+              background: {% if not is_state('climate.heater_heater','off') %}rgba(255,100,50,0.12){% else %}var(--ha-card-background){% endif %};
+            }
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.heater_oscillating
+            name: Oscillation
+            icon: mdi:rotate-3d-variant
+            icon_color: orange
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: switch.heater_child_lock
+            name: Verrou enfant
+            icon: mdi:lock
+            icon_color: red
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: switch.heater_ptc
+            name: Mode PTC
+            icon: mdi:fire
+            icon_color: deep-orange
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: switch.heater_panel_sound
+            name: Son panneau
+            icon: mdi:volume-high
+            icon_color: grey
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: history-graph
+        entities:
+          - entity: sensor.echo_dot_salon_temperature
+            name: Température ambiante
+        hours_to_show: 48
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🌬️ Purificateur d'air
+      - type: custom:mushroom-fan-card
+        entity: fan.core_300s_series
+        name: Levoit Core 300S
+        icon: mdi:air-purifier
+        show_percentage_control: true
+        show_oscillate_control: false
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 16px;
+              background: {% if is_state('fan.core_300s_series','on') %}rgba(100,200,255,0.12){% else %}var(--ha-card-background){% endif %};
+            }
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: "{{ states('sensor.core_300s_series_pm2_5') }} µg/m³"
+            secondary: PM2.5
+            icon: mdi:blur
+            icon_color: >-
+              {% set pm = states('sensor.core_300s_series_pm2_5')|int(0) %} {%
+              if pm > 35 %}red{% elif pm > 12 %}orange{% else %}green{% endif %}
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: >-
+              {{ states('sensor.core_300s_series_qualite_de_l_air') | capitalize
+              }}
+            secondary: Qualité
+            icon: mdi:leaf
+            icon_color: >-
+              {% set q = states('sensor.core_300s_series_qualite_de_l_air') %}
+              {% if q == 'excellent' %}green{% elif q == 'good' %}light-green{%
+              elif q == 'moderate' %}amber{% else %}red{% endif %}
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.core_300s_series_filter_lifetime
+            name: Filtre
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 50
+              yellow: 20
+              red: 5
+          - type: custom:mushroom-entity-card
+            entity: switch.core_300s_series_display
+            name: Écran
+            icon: mdi:monitor
+            icon_color: cyan
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: history-graph
+        entities:
+          - entity: sensor.core_300s_series_pm2_5
+            name: PM2.5 (µg/m³)
+          - entity: sensor.core_300s_series_qualite_de_l_air
+            name: Qualité
+        hours_to_show: 48
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 💧 Humidificateur
+      - type: custom:mushroom-humidifier-card
+        entity: humidifier.humidifier
+        name: Humidificateur
+        icon: mdi:air-humidifier
+        show_target_humidity_control: true
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 16px;
+              background: {% if is_state('humidifier.humidifier','on') %}rgba(80,160,255,0.12){% else %}var(--ha-card-background){% endif %};
+            }
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: "{{ states('sensor.humidifier_humidity') }}%"
+            secondary: Humidité
+            icon: mdi:water-percent
+            icon_color: >-
+              {% set h = states('sensor.humidifier_humidity')|int(0) %} {% if h
+              > 60 %}blue{% elif h > 40 %}green{% else %}amber{% endif %}
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: "{{ states('sensor.humidifier_water_level') }}"
+            secondary: Eau
+            icon: mdi:water
+            icon_color: >-
+              {% if is_state('sensor.humidifier_water_level','Ok') %}green{%
+              else %}red{% endif %}
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: entity
+            entity: sensor.humidifier_use_since_cleaning
+            icon: mdi:broom
+          - type: entity
+            entity: switch.humidifier_schedule
+            icon: mdi:calendar-clock
+          - type: entity
+            entity: switch.humidifier_panel_sound
+            icon: mdi:volume-high
+      - type: history-graph
+        entities:
+          - entity: sensor.humidifier_humidity
+            name: Humidité ambiante (%)
+        hours_to_show: 48
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+  - title: Média
+    path: media
+    icon: mdi:music
+    cards:
+      - type: custom:mushroom-title-card
+        title: Média
+        subtitle: Audio & Vidéo
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🔊 Enceintes
+      - type: custom:mushroom-media-player-card
+        entity: media_player.echo_dot_salon
+        name: Echo Dot — Salon
+        icon: mdi:speaker
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_mute
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-media-player-card
+        entity: media_player.echo_pop_chambre
+        name: Echo Pop — Chambre
+        icon: mdi:speaker
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_mute
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-media-player-card
+        entity: media_player.everywhere
+        name: Partout (Multi-room)
+        icon: mdi:speaker-multiple
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_mute
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-media-player-card
+        entity: media_player.abdoul_s_wh_1000xm4
+        name: Sony WH-1000XM4
+        icon: mdi:headphones
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-media-player-card
+        entity: media_player.homelab_server
+        name: HomeLab (Music Assistant)
+        icon: mdi:music-box
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_set
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 📺 Écrans
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-media-player-card
+            entity: media_player.salon_tv_2
+            name: Salon TV
+            icon: mdi:television
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - on_off
+              - play_pause_stop
+            volume_controls:
+              - volume_mute
+              - volume_set
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-media-player-card
+            entity: media_player.smart_tv_pro
+            name: Smart TV Pro
+            icon: mdi:television-classic
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - on_off
+              - play_pause_stop
+            volume_controls:
+              - volume_mute
+              - volume_set
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-media-player-card
+            entity: media_player.living_room_streamer
+            name: TV Chambre
+            icon: mdi:television
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - on_off
+              - play_pause_stop
+            volume_controls:
+              - volume_mute
+              - volume_set
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-media-player-card
+            entity: media_player.hy300_ultra_5521
+            name: Projecteur HY300
+            icon: mdi:projector
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - on_off
+              - play_pause_stop
+            volume_controls:
+              - volume_mute
+              - volume_set
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🎶 Music Assistant
+      - type: custom:mushroom-template-card
+        primary: Ouvrir Music Assistant
+        secondary: Serveur audio · port 8095
+        icon: mdi:music-box-multiple
+        icon_color: deep-purple
+        tap_action:
+          action: url
+          # CUSTOMIZE: Replace with your server IP
+          url_path: http://192.168.0.10:8095
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 16px;
+              background: rgba(130,80,220,0.1);
+            }
+  - title: Aspirateur
+    path: vacuum
+    icon: mdi:robot-vacuum
+    cards:
+      - type: custom:mushroom-title-card
+        title: Aspirateurs
+        subtitle: Contrôle des robots
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🤖 Dreame X50 Ultra
+      - type: custom:mushroom-template-card
+        primary: X50 Ultra Complete
+        secondary: >-
+          {{ states('vacuum.x50_ultra_complete') | capitalize }} · 🔋 {{
+          states('sensor.x50_ultra_complete_battery_level') }}% {% if
+          is_state('vacuum.x50_ultra_complete','cleaning') %} · {{
+          states('sensor.x50_ultra_complete_cleaned_area') }}m² · {{
+          states('sensor.x50_ultra_complete_cleaning_time') }}min {% endif %}
+        icon: mdi:robot-vacuum
+        icon_color: >-
+          {% if is_state('vacuum.x50_ultra_complete','cleaning') %}green {% elif
+          is_state('vacuum.x50_ultra_complete','returning') %}orange {% elif
+          is_state('vacuum.x50_ultra_complete','docked') %}blue {% elif
+          is_state('vacuum.x50_ultra_complete','error') %}red {% else %}grey{%
+          endif %}
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+      - type: picture-entity
+        entity: camera.x50_ultra_complete_map
+        name: ""
+        show_state: false
+        show_name: false
+        camera_view: auto
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; overflow: hidden; }
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: entity
+            entity: sensor.x50_ultra_complete_status
+            icon: mdi:information
+          - type: entity
+            entity: sensor.x50_ultra_complete_battery_level
+            icon: mdi:battery
+          - type: entity
+            entity: sensor.x50_ultra_complete_self_wash_base_status
+            icon: mdi:water
+          - type: entity
+            entity: sensor.x50_ultra_complete_current_room
+            icon: mdi:home-map-marker
+          - type: template
+            icon: mdi:water
+            icon_color: >-
+              {% if is_state('sensor.x50_ultra_complete_low_water_warning','no_water_left')
+              %}red{% elif
+              is_state('sensor.x50_ultra_complete_clean_water_tank_status','installed')
+              %}blue{% else %}grey{% endif %}
+            content: "💧 {{ states('sensor.x50_ultra_complete_clean_water_tank_status') | capitalize }}"
+            tap_action:
+              action: more-info
+              entity: sensor.x50_ultra_complete_clean_water_tank_status
+          - type: template
+            icon: mdi:delete
+            icon_color: >-
+              {% if
+              is_state('sensor.x50_ultra_complete_dust_bag_status','installed')
+              %}green{% else %}amber{% endif %}
+            content: "🗑️ {{ states('sensor.x50_ultra_complete_dust_bag_status') | capitalize }}"
+            tap_action:
+              action: more-info
+              entity: sensor.x50_ultra_complete_dust_bag_status
+      - type: history-graph
+        entities:
+          - entity: sensor.x50_ultra_complete_battery_level
+            name: Batterie X50 Ultra (%)
+          - entity: sensor.aspirateur_batterie
+            name: Batterie Chambre (%)
+        hours_to_show: 48
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: entities
+        title: Statistiques
+        show_header_toggle: false
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+        entities:
+          - entity: sensor.x50_ultra_complete_cleaning_count
+            name: Nettoyages
+            icon: mdi:counter
+          - entity: sensor.x50_ultra_complete_total_cleaned_area
+            name: Surface (m²)
+            icon: mdi:texture-box
+          - entity: sensor.x50_ultra_complete_total_cleaning_time
+            name: Temps (min)
+            icon: mdi:clock
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🏠 Station
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.x50_ultra_complete_clean_water_tank_status
+            name: Eau propre
+            icon: mdi:water
+            icon_color: blue
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.x50_ultra_complete_dirty_water_tank_status
+            name: Eau sale
+            icon: mdi:water-off
+            icon_color: brown
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.x50_ultra_complete_dust_bag_status
+            name: Bac à poussière
+            icon: mdi:delete
+            icon_color: grey
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.x50_ultra_complete_mop_pad
+            name: Serpillère
+            icon: mdi:square-rounded
+            icon_color: teal
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.x50_ultra_complete_low_water_warning
+            name: Alerte eau
+            icon: mdi:water-alert
+            icon_color: red
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.x50_ultra_complete_detergent_status
+            name: Détergent
+            icon: mdi:bottle-tonic
+            icon_color: green
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🔧 Consommables
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.x50_ultra_complete_filter_left
+            name: Filtre
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 50
+              yellow: 20
+              red: 5
+          - type: gauge
+            entity: sensor.x50_ultra_complete_main_brush_left
+            name: Brosse principale
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 50
+              yellow: 20
+              red: 5
+          - type: gauge
+            entity: sensor.x50_ultra_complete_side_brush_left
+            name: Brosse latérale
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 50
+              yellow: 20
+              red: 5
+          - type: gauge
+            entity: sensor.x50_ultra_complete_sensor_dirty_left
+            name: Capteur
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 50
+              yellow: 20
+              red: 5
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: ⚙️ Options
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.x50_ultra_complete_dnd
+            name: Ne pas déranger
+            icon: mdi:bell-off
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: switch.x50_ultra_complete_child_lock
+            name: Verrou enfant
+            icon: mdi:lock
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: switch.x50_ultra_complete_carpet_boost
+            name: Boost tapis
+            icon: mdi:rug
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: switch.x50_ultra_complete_auto_drying
+            name: Séchage auto
+            icon: mdi:fan
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🧹 Aspirateur Chambre
+      - type: custom:mushroom-template-card
+        primary: Aspirateur Chambre
+        secondary: >-
+          {{ states('vacuum.aspirateur') | capitalize }} · 🔋 {{
+          states('sensor.aspirateur_batterie') }}%
+        icon: mdi:robot-vacuum-variant
+        icon_color: teal
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+  - title: Téléphone
+    path: phone
+    icon: mdi:cellphone
+    cards:
+      - type: custom:mushroom-title-card
+        title: Appareils
+        subtitle: Mobiles & wearables
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 📱 Pixel 9 Pro XL
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: template
+            icon: >-
+              {% set lvl =
+              states('sensor.pixel_9_pro_xl_battery_level')|int(0) %} {% if lvl
+              > 80 %}mdi:battery {% elif lvl > 60 %}mdi:battery-70 {% elif lvl >
+              40 %}mdi:battery-50 {% elif lvl > 20 %}mdi:battery-30 {% else
+              %}mdi:battery-10{% endif %}
+            icon_color: >-
+              {% set lvl =
+              states('sensor.pixel_9_pro_xl_battery_level')|int(0) %} {% if lvl
+              > 50 %}green{% elif lvl > 20 %}amber{% else %}red{% endif %}
+            content: "{{ states('sensor.pixel_9_pro_xl_battery_level') }}%"
+          - type: entity
+            entity: sensor.pixel_9_pro_xl_battery_state
+            icon: mdi:power-plug
+          - type: entity
+            entity: sensor.pixel_9_pro_xl_bluetooth_connection
+            icon: mdi:bluetooth
+          - type: entity
+            entity: sensor.pixel_9_pro_xl_charger_type
+            icon: mdi:ev-plug-type2
+      - type: history-graph
+        entities:
+          - entity: sensor.pixel_9_pro_xl_battery_level
+            name: Batterie (%)
+        hours_to_show: 48
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: entities
+        title: Connexions
+        show_header_toggle: false
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+        entities:
+          - entity: sensor.pixel_9_pro_xl_bluetooth_connection
+            name: Bluetooth
+            icon: mdi:bluetooth
+          - entity: sensor.pixel_9_pro_xl_charger_type
+            name: Chargeur
+            icon: mdi:ev-plug-type2
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.pixel_9_pro_xl_bluetooth_connection
+            name: Bluetooth
+            icon: mdi:bluetooth
+            icon_color: blue
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.pixel_9_pro_xl_nfc_state
+            name: NFC
+            icon: mdi:nfc
+            icon_color: green
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: ⌚ Amazfit Balance
+      - type: custom:mushroom-template-card
+        primary: Amazfit Balance
+        secondary: >-
+          {% if is_state('binary_sensor.amazfit_balance_connectivite','on')
+          %}Connectée{% else %}Déconnectée{% endif %}
+        icon: mdi:watch
+        icon_color: >-
+          {% if is_state('binary_sensor.amazfit_balance_connectivite','on')
+          %}green{% else %}red{% endif %}
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+  - title: Système
+    path: system
+    icon: mdi:server
+    cards:
+      - type: custom:mushroom-title-card
+        title: Système
+        subtitle: Infrastructure homelab
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🌐 Services
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Home Assistant
+            secondary: Domotique
+            icon: mdi:home-assistant
+            icon_color: cyan
+            tap_action:
+              action: url
+              # CUSTOMIZE: Replace with your server IP
+              url_path: http://192.168.0.10:8123
+            card_mod:
+              style: >
+                ha-card { border-radius: 16px; background: rgba(0,188,212,0.08);
+                }
+          - type: custom:mushroom-template-card
+            primary: Pi-hole
+            secondary: DNS Sinkhole
+            icon: mdi:shield-check
+            icon_color: green
+            tap_action:
+              action: url
+              # CUSTOMIZE: Replace with your server IP
+              url_path: http://192.168.0.10:8080/admin
+            card_mod:
+              style: >
+                ha-card { border-radius: 16px; background: rgba(76,175,80,0.08);
+                }
+          - type: custom:mushroom-template-card
+            primary: Traefik
+            secondary: Reverse Proxy
+            icon: mdi:web
+            icon_color: blue
+            tap_action:
+              action: url
+              # CUSTOMIZE: Replace with your server IP
+              url_path: http://192.168.0.10:8081
+            card_mod:
+              style: >
+                ha-card { border-radius: 16px; background:
+                rgba(33,150,243,0.08); }
+          - type: custom:mushroom-template-card
+            primary: Music Assistant
+            secondary: Serveur audio
+            icon: mdi:music-box
+            icon_color: deep-purple
+            tap_action:
+              action: url
+              # CUSTOMIZE: Replace with your server IP
+              url_path: http://192.168.0.10:8095
+            card_mod:
+              style: >
+                ha-card { border-radius: 16px; background:
+                rgba(130,80,220,0.08); }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 💾 Sauvegardes
+      - type: entities
+        show_header_toggle: false
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px; }
+        entities:
+          - entity: sensor.backup_backup_manager_state
+            name: État
+            icon: mdi:backup-restore
+          - entity: sensor.backup_last_successful_automatic_backup
+            name: Dernière réussie
+            icon: mdi:check-circle
+          - entity: sensor.backup_next_scheduled_automatic_backup
+            name: Prochaine
+            icon: mdi:calendar-clock
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 🔄 Mises à jour
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-update-card
+            entity: update.hacs_update
+            name: HACS
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.card_mod_update
+            name: card-mod
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.alexa_media_player_update
+            name: Alexa
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.dreame_vacuum_update
+            name: Dreame
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.dreo_smart_device_integration_update
+            name: Dreo
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.core_300s_series_micrologiciel
+            name: Levoit 300S
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.google_home_update
+            name: Google Home
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.google_assistant_sdk_custom_update
+            name: Google SDK
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.mushroom_better_sliders_update
+            name: Mushroom Sliders
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.mushroom_dashboard_strategy_update
+            name: Mushroom Strategy
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.mushroom_themes_update
+            name: Mushroom Themes
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.music_assistant_player_card_update
+            name: MA Player Card
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-update-card
+            entity: update.music_assistant_queue_actions_update
+            name: MA Queue Actions
+            show_buttons_control: true
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: 📊 Environnement (7 jours)
+      - type: statistics-graph
+        entities:
+          - entity: sensor.echo_dot_salon_temperature
+            name: Température (°C)
+        days_to_show: 7
+        stat_types:
+          - mean
+          - min
+          - max
+        chart_type: line
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: statistics-graph
+        entities:
+          - entity: sensor.humidifier_humidity
+            name: Humidité (%)
+          - entity: sensor.core_300s_series_pm2_5
+            name: PM2.5 (µg/m³)
+        days_to_show: 7
+        stat_types:
+          - mean
+          - min
+          - max
+        chart_type: line
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }
+      - type: custom:mushroom-title-card
+        title: ""
+        subtitle: ☀️ Soleil
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.sun_next_dawn
+            name: Aube
+            icon: mdi:weather-sunset-up
+            icon_color: amber
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.sun_next_noon
+            name: Midi
+            icon: mdi:weather-sunny
+            icon_color: yellow
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.sun_next_dusk
+            name: Crépuscule
+            icon: mdi:weather-sunset-down
+            icon_color: deep-orange
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.sun_next_rising
+            name: Lever
+            icon: mdi:white-balance-sunny
+            icon_color: amber
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+          - type: custom:mushroom-entity-card
+            entity: sensor.sun_next_setting
+            name: Coucher
+            icon: mdi:weather-night
+            icon_color: indigo
+            card_mod:
+              style: |
+                ha-card { border-radius: 16px; }
+      - type: history-graph
+        entities:
+          - entity: sensor.sun_next_setting
+            name: Coucher du soleil
+        hours_to_show: 48
+        card_mod:
+          style: |
+            ha-card { border-radius: 16px !important; }

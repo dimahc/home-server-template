@@ -1,0 +1,47 @@
+services:
+  {{ traefik_container_name }}:
+    image: {{ traefik_image }}
+    container_name: {{ traefik_container_name }}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+{% if traefik_enable_acme | bool %}
+      - "443:443"
+{% endif %}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - {{ traefik_config_dir }}:/etc/traefik
+      - {{ traefik_dynamic_config_dir }}:/etc/traefik/dynamic:ro
+{% if traefik_enable_acme | bool %}
+      - {{ traefik_acme_storage }}:/etc/traefik/acme.json
+{% endif %}
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--ping=true"
+{% for ep in traefik_entrypoints %}
+      - "--entrypoints.{{ ep.name }}.address={{ ep.address }}"
+{% endfor %}
+{% if traefik_enable_acme | bool %}
+      - "--certificatesresolvers.{{ traefik_acme_resolver }}.acme.email={{ traefik_acme_email }}"
+      - "--certificatesresolvers.{{ traefik_acme_resolver }}.acme.storage=/etc/traefik/acme.json"
+      - "--certificatesresolvers.{{ traefik_acme_resolver }}.acme.httpchallenge=true"
+      - "--certificatesresolvers.{{ traefik_acme_resolver }}.acme.httpchallenge.entrypoint={{ traefik_acme_challenge_entrypoint }}"
+{% endif %}
+    labels:
+      - "traefik.enable=true"
+    networks:
+      - {{ traefik_network }}
+
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  {{ traefik_network }}:
+    external: true

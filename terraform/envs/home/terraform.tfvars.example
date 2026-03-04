@@ -1,0 +1,4 @@
+# Terraform example variables for home environment
+# Copy to terraform.tfvars and customize
+
+homelab_name = "home"

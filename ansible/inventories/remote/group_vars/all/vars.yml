@@ -1,0 +1,24 @@
+homelab_timezone: "UTC"
+homelab_locale: "en_US.UTF-8"
+homelab_packages:
+  - curl
+  - git
+  - fail2ban
+  - ufw
+  - unattended-upgrades
+
+# Tailscale VPN — same auth key, different hostname
+tailscale_auth_key: "{{ vault_tailscale_auth_key }}"
+tailscale_accept_routes: true
+
+# Firewall — VPS should be STRICT
+# Only SSH + Tailscale publicly open. All services accessed via Tailscale only.
+firewall_allowed_tcp_ports:
+  - 55022 # SSH (custom port)
+  - 80 # HTTP (for ACME/certbot challenges, optional)
+  - 443 # HTTPS (for ACME/certbot challenges, optional)
+
+firewall_allowed_udp_ports:
+  - 41641 # Tailscale WireGuard
+
+firewall_default_policy: deny

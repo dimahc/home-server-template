@@ -1,0 +1,55 @@
+# Local Terraform state
+**/.terraform/**
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Ansible artifacts
+*.retry
+ansible/.cache/
+
+# Python virtualenvs / tooling
+.env
+.venv/
+__pycache__/
+.mypy_cache/
+
+# Temporary/scratch directories
+tmp/
+
+# Ansible collection cache
+.ansible/
+
+# Editor swap files
+*.swp
+*.swo
+.DS_Store
+.idea/
+.vscode/
+
+# Compose runtime files
+.env.local
+secrets/*.key
+
+# Ansible sensitive files
+ansible/.vault_pass
+ansible/**/.vault_pass
+*.vault
+**/vault.yml
+!**/vault.yml.example
+
+# Terraform state and vars (should never be committed)
+terraform/**/*.tfstate
+terraform/**/*.tfstate.*
+terraform/**/*.tfvars
+!terraform/**/*.tfvars.example
+
+# Stray Home Assistant config exports
+config_entry-*.json
+
+# Generated files
+**/.generated-*
+
+# Docker env files (keep .example)
+**/.env
+!**/.env.example

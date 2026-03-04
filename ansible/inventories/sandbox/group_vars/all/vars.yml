@@ -1,0 +1,5 @@
+homelab_timezone: "UTC"
+homelab_locale: "en_US.UTF-8"
+homelab_packages:
+  - curl
+  - git

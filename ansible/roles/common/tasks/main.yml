@@ -1,0 +1,125 @@
+---
+- name: Ensure locale is present
+  community.general.locale_gen:
+    name: "{{ homelab_locale }}"
+    state: present
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ homelab_timezone }}"
+
+- name: Install base packages
+  ansible.builtin.package:
+    name: "{{ homelab_packages }}"
+    state: present
+
+- name: Ensure Docker repo prerequisites are installed
+  ansible.builtin.package:
+    name:
+      - ca-certificates
+      - gnupg
+    state: present
+
+- name: Create ansible service account
+  ansible.builtin.user:
+    name: "{{ ansible_service_account.username }}"
+    shell: "{{ ansible_service_account.shell }}"
+    groups: "{{ ansible_service_account.groups }}"
+    append: true
+    create_home: true
+    state: present
+  when: ansible_service_account is defined and ansible_service_account.enabled | bool
+  tags: [ansibleaccount, security]
+
+- name: Configure sudo for ansible service account
+  ansible.builtin.template:
+    src: sudoers-ansible.j2
+    dest: "/etc/sudoers.d/{{ ansible_service_account.username }}"
+    mode: "0440"
+    owner: root
+    group: root
+    validate: "/usr/sbin/visudo -cf %s"
+  when: ansible_service_account is defined and ansible_service_account.enabled | bool
+  tags: [ansibleaccount, security]
+
+- name: Deploy SSH authorized keys for users
+  ansible.posix.authorized_key:
+    user: "{{ item.0.user }}"
+    key: "{{ item.1 }}"
+    state: present
+    exclusive: false
+  loop: "{{ ssh_authorized_keys | subelements('keys') }}"
+  when: ssh_authorized_keys is defined
+  tags: [ssh, security]
+
+- name: Configure SSH daemon
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    validate: "/usr/sbin/sshd -t -f %s"
+  loop:
+    - regexp: "^#?PermitRootLogin"
+      line: "PermitRootLogin {{ ssh_permit_root_login }}"
+    - regexp: "^#?PasswordAuthentication"
+      line: "PasswordAuthentication {{ ssh_password_authentication }}"
+    - regexp: "^#?PubkeyAuthentication"
+      line: "PubkeyAuthentication {{ ssh_pubkey_authentication }}"
+    - regexp: "^#?Port"
+      line: "Port {{ ssh_port }}"
+  when: ssh_permit_root_login is defined or ssh_password_authentication is defined
+  notify: Restart sshd
+  tags: [ssh, security]
+
+- name: Ensure /etc/apt/keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  tags: [docker]
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+    owner: root
+    group: root
+  tags: [docker]
+
+- name: Get dpkg architecture
+  ansible.builtin.command: dpkg --print-architecture
+  register: common_dpkg_arch
+  changed_when: false
+  tags: [docker]
+
+- name: Add Docker APT repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ common_dpkg_arch.stdout }}
+      signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/debian
+      {{ ansible_distribution_release }} stable
+    state: present
+    filename: docker
+  tags: [docker]
+
+- name: Install Docker Engine packages
+  ansible.builtin.package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  tags: [docker]
+
+- name: Enable and start Docker service
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  tags: [docker]
